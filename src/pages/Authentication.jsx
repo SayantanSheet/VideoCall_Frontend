@@ -37,13 +37,18 @@ export default function Authentication() {
     let handleAuth=async ()=>{
         try{
           if(formState === 0){
+            let result = await handleLogin(username, password);
 
           }
           if(formState === 1){
           let result= await handleRegister(name, username, password);
           console.log(result);
+          setUsername("");
           setMessage(result);
           setOpen(true);
+          setError("");
+          setFormState(0);
+          setPassword("");
           }
         } catch(err){
          let message = (err.response.data.message);
@@ -82,14 +87,50 @@ export default function Authentication() {
               <LockOutlinedIcon />
             </Avatar>
 
-            <div>
-                <Button variant={formState === 0 ? "contained": ''} onClick={()=>{setFormState(0)}}>
-                    Sign In
-                </Button>
-                <Button variant={formState === 1 ? "contained": ''} onClick={()=>{setFormState(1)}}>
-                    Sign Up
-                </Button>
-            </div>
+
+            <Box sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 2,
+              width: '100%',
+              mb: 3,
+              mt: 2
+            }}>
+              <Button
+                variant={formState === 0 ? 'contained' : 'outlined'}
+                color={formState === 0 ? 'primary' : 'inherit'}
+                onClick={() => setFormState(0)}
+                sx={{
+                  borderRadius: '30px',
+                  px: 4,
+                  py: 1.5,
+                  fontWeight: formState === 0 ? 700 : 400,
+                  boxShadow: formState === 0 ? 2 : 0,
+                  transition: 'all 0.2s',
+                  fontSize: '1rem'
+                }}
+              >
+                Sign In
+              </Button>
+              <Button
+                variant={formState === 1 ? 'contained' : 'outlined'}
+                color={formState === 1 ? 'secondary' : 'inherit'}
+                onClick={() => setFormState(1)}
+                sx={{
+                  borderRadius: '30px',
+                  px: 4,
+                  py: 1.5,
+                  fontWeight: formState === 1 ? 700 : 400,
+                  boxShadow: formState === 1 ? 2 : 0,
+                  transition: 'all 0.2s',
+                  fontSize: '1rem'
+                }}
+              >
+                Sign Up
+              </Button>
+            </Box>
 
             <Box component="form" noValidate sx={{ mt: 1 }}>
                 {formState === 1 ?
@@ -100,6 +141,7 @@ export default function Authentication() {
                 id="username"
                 label="Full Name"
                 name="username"
+                value={name}
                 autoFocus
                 onChange={(e) => setName(e.target.value)}
               />
@@ -112,6 +154,7 @@ export default function Authentication() {
                 id="username"
                 label="Username"
                 name="username"
+                value={username}
                 autoFocus
                 onChange={(e) => setUsername(e.target.value)}
               />
@@ -121,6 +164,7 @@ export default function Authentication() {
                 fullWidth
                 name="password"
                 label="Password"
+                value={password}
                 type="password"
                 id="password"
                 onChange={(e) => setPassword(e.target.value)}

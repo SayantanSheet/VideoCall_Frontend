@@ -7,7 +7,7 @@ import httpStatus from "http-status-codes";
 export const AuthContext = createContext({});
 
 const client= axios.create({
-    baseURL:"localhost:8000/api/v1/users"
+    baseURL:"http://localhost:8000/api/v1/users"
 })
 
 export const AuthProvider = ({ children }) => {
@@ -49,7 +49,8 @@ export const AuthProvider = ({ children }) => {
     const data={
         userData,
         setUserData,
-        handleRegister
+        handleRegister,
+        handleLogin
     }
     return (
         <AuthContext.Provider value={data}>
