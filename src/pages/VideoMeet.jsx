@@ -136,7 +136,7 @@ export default function VideoMeetComponent() {
           connections[id].createOffer().then((description)=>{
           connections[id].setLocalDescription(description)
           .then(()=>{
-            socketIdRef.current.emit("signal", id, JSON.stringify({'sdp': connections[id].localDescription}));
+            socketRef.current.emit("signal", id, JSON.stringify({'sdp': connections[id].localDescription}));
           })
           .catch(e => console.log(e))
         })
@@ -261,30 +261,28 @@ export default function VideoMeetComponent() {
 
 
             connections[socketListId].onaddstream = (event) => {
-             let videoExists = videoRef.current.find((video) => video.socketId == socketListId);
-             if(videoExists){
-              setVideo(videos=>{
-                const updatedVideos = videos.map(video => 
-                  video.socketId == socketListId ? { ...video, stream: event.stream } : video
-                );
-                videoRef.current = updatedVideos;
-                return updatedVideos;
-              })
-             } else {
-
-              let newVideo = {
-                socketId: socketListId,
-                stream: event.stream,
-                autoPlay: true,
-                playsinline: true,
+              let videoExists = videoRef.current.find((video) => video.socketId == socketListId);
+              if(videoExists){
+                setVideos(videos => {
+                  const updatedVideos = videos.map(video => 
+                    video.socketId == socketListId ? { ...video, stream: event.stream } : video
+                  );
+                  videoRef.current = updatedVideos;
+                  return updatedVideos;
+                })
+              } else {
+                let newVideo = {
+                  socketId: socketListId,
+                  stream: event.stream,
+                  autoPlay: true,
+                  playsinline: true,
+                }
+                setVideos(videos =>{
+                  const updatedVideos = [ ...videos, newVideo];
+                  videoRef.current = updatedVideos;
+                  return updatedVideos;
+                })
               }
-
-              setVideos(videos =>{
-                const updatedVideos = [ ...videos, newVideo];
-                videoRef.current = updatedVideos;
-                return updatedVideos;
-              })
-             }
             }
 
             if(window.localStream !== undefined && window.localStream !== null) {
@@ -345,7 +343,70 @@ export default function VideoMeetComponent() {
     let handleAudio = () =>{
       setAudio(!audio);
     }
-  
+
+    let getDisplayMediaSuccess = (stream) => {
+      try {
+        window.localStream.getTracks().forEach(track => track.stop())
+      } catch (e) {
+        console.error("Error in getDisplayMediaSuccess:", e);
+      }
+      window.localStream = stream;
+      localVideoRef.current.srcObject = stream;
+
+      for (let id in connections) {
+        if(id === socketIdRef.current) continue;
+        connections[id].addStream(window.localStream);
+
+        connections[id].createOffer().then((description)=>{
+          connections[id].setLocalDescription(description)
+          .then(()=>{
+            socketRef.current.emit("signal", id, JSON.stringify({'sdp': connections[id].localDescription}));
+          })
+          .catch(e => console.log(e))
+        })
+      }
+
+      stream.getTracks().forEach(track => track.onended = ()=>{
+        setScreen(false);
+
+        try {
+          let tracks= localVideoRef.current.srcObject.getTracks();
+          tracks.forEach(track => track.stop())
+        } catch(e) { console.log(e)}
+
+        //TODO BlackSilence
+         let blackSilence = ( ...args)=> new MediaStream([black(...args), silence()]);
+              window.localStream = blackSilence();
+              localVideoRef.current.srcObject = window.localStream;
+
+       getUserMedia();
+      })
+
+
+    }
+
+
+    let getDisplayMedia = ()=>{
+      if(screen) {
+        if(navigator.mediaDevices.getDisplayMedia) {
+          navigator.mediaDevices.getDisplayMedia({video: true, audio: true})
+          .then(getDisplayMediaSuccess)
+          .then((screen)=>{})
+          .catch((e)=>console.log(e))
+        }
+      }
+    }
+
+    useEffect(()=>{
+      if(screen !== undefined) {
+        getDisplayMedia();
+      }
+    },[screen]);
+
+
+    let handleScreen = () => {
+      setScreen(!screen);
+    }
 
     //TODO
     // if(isChrome() === false) {
@@ -390,7 +451,7 @@ export default function VideoMeetComponent() {
           </IconButton>
 
           {screenAvailable === true? 
-          <IconButton style={{color: 'white'}}>
+          <IconButton onClick={handleScreen} style={{color: 'white'}}>
             {screen === true ? <ScreenShareIcon/> : <StopScreenShareIcon/>}
           </IconButton>: <></>}
 
@@ -417,7 +478,6 @@ export default function VideoMeetComponent() {
           }}
           autoPlay
           >
-
           </video>
         </div>
       ))}
