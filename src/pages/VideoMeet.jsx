@@ -16,6 +16,7 @@ import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import StopScreenShareIcon from '@mui/icons-material/StopScreenShare';
 import Badge from '@mui/material/Badge';
 import ChatIcon from '@mui/icons-material/Chat';
+import { useNavigate } from 'react-router-dom';
 
 const server_url= "http://localhost:8000";
 
@@ -330,6 +331,9 @@ export default function VideoMeetComponent() {
       connectToSocketServer();
     }
 
+
+    let routeTo = useNavigate();
+
     // Define connect function for button
     let connect = () => {
       setAskForUsername(false);
@@ -418,6 +422,19 @@ export default function VideoMeetComponent() {
       setMessage(""); // <-- Clear the input, not the messages array
     }
 
+
+    let handleEndCall = () => {
+      try {
+        let tracks = localVideoRef.current.srcObject.getTracks();
+        tracks.forEach((track) => track.stop());
+      } catch (e) {
+        console.error("Error stopping media tracks:", e);
+      }
+      routeTo("/home");
+
+   
+    }
+
     
 
     //TODO
@@ -459,14 +476,14 @@ export default function VideoMeetComponent() {
           <div className={styles.chattingDisplay}>
 
 
-            {messages.map((item, index) => {
+            {messages.length > 0 ? messages.map((item, index) => {
               return (
-                <div key={index}>
+                <div style={{marginBottom:"20px"}} key={index}>
                   <p style={{fontWeight:"bold"}}>{item.sender}</p>
                   <p>{item.data}</p>
                 </div>
               )
-            })}
+            }):<p>No Messages Yet</p> }
           </div>
           <div className={styles.chattingArea}>
 
@@ -482,7 +499,7 @@ export default function VideoMeetComponent() {
             {(video === true)? <VideocamIcon/> : <VideocamOffIcon/>}
           </IconButton>
 
-           <IconButton style={{color: 'red'}}>
+           <IconButton onClick={handleEndCall} style={{color: 'red'}}>
             <CallEndIcon/>
           </IconButton>
 
