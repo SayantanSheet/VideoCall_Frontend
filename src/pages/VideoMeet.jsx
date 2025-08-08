@@ -47,7 +47,7 @@ export default function VideoMeetComponent() {
 
     let [screen, setScreen] = useState();
 
-    let [showModal, setShowModal] = useState();
+    let [showModal, setShowModal] = useState(true);
 
     let [screenAvailable, setScreenAvailable] = useState();
 
@@ -68,8 +68,7 @@ export default function VideoMeetComponent() {
     const getPermissions = async () => {
         try {
             const videoPermission = await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
+                video: true
             });
            if(videoPermission) {
                 setVideoAvailable(true);
@@ -92,7 +91,7 @@ export default function VideoMeetComponent() {
                 setScreenAvailable(false);
             }
 
-            if(videoAvailable && audioAvailable) {
+            if(videoAvailable || audioAvailable) {
                 const userMediaStream = await navigator.mediaDevices.getUserMedia({
                     video: videoAvailable,
                     audio: audioAvailable
@@ -235,8 +234,14 @@ export default function VideoMeetComponent() {
 
     }
 
-    let addMessage = () => {
-
+    let addMessage = (data, sender, socketIdSender) => {
+      setMessages((prevMessages) => [      
+          ...prevMessages,
+        {sender: sender, data: data}
+      ]);
+      if(socketIdSender !== socketIdRef.current) {
+        setNewMessages((prevCount) => prevCount + 1);
+      }
     }
 
     let connectToSocketServer = () => {
@@ -244,7 +249,7 @@ export default function VideoMeetComponent() {
       socketRef.current.on('signal', gotMessageFromServer);
       socketRef.current.on("connect", () => {
         // Use window.location.pathname as room identifier
-        socketRef.current.emit("join-call", window.localStream, window.location.pathname);
+        socketRef.current.emit("join-call", window.location.href);
         socketIdRef.current = socketRef.current.id;
         socketRef.current.on("chat-message", addMessage);
         socketRef.current.on("user-left", (id) => {
@@ -408,6 +413,13 @@ export default function VideoMeetComponent() {
       setScreen(!screen);
     }
 
+    let sendMessage = () => {
+      socketRef.current.emit("chat-message", message, username);
+      setMessage(""); // <-- Clear the input, not the messages array
+    }
+
+    
+
     //TODO
     // if(isChrome() === false) {
       
@@ -437,6 +449,34 @@ export default function VideoMeetComponent() {
         </div>
       : <div className={styles.meetVideoContainer}>
 
+
+        {showModal?
+        <div className={styles.chatRoom}>
+          <div className={styles.chatContainer}>
+
+          <h1>Chat</h1>
+
+          <div className={styles.chattingDisplay}>
+
+
+            {messages.map((item, index) => {
+              return (
+                <div key={index}>
+                  <p style={{fontWeight:"bold"}}>{item.sender}</p>
+                  <p>{item.data}</p>
+                </div>
+              )
+            })}
+          </div>
+          <div className={styles.chattingArea}>
+
+            <TextField value={message} onChange={(e) => setMessage(e.target.value)} id='outlined-basic' label="Enter Your Chat" variant='outlined'/>
+            <Button variant='contained' onClick={sendMessage}>Send</Button>
+          </div>
+          </div>
+        </div> : <></>   
+        }
+
         <div className={styles.buttonContainer}>
           <IconButton onClick={handleVideo} style={{color: 'white'}}>
             {(video === true)? <VideocamIcon/> : <VideocamOffIcon/>}
@@ -456,7 +496,7 @@ export default function VideoMeetComponent() {
           </IconButton>: <></>}
 
           <Badge badgeContent={newMessages} max={999} color='secondary'>
-          <IconButton style={{color: 'white'}}>
+          <IconButton onClick={()=> setShowModal(!showModal)} style={{color: 'white'}}>
           <ChatIcon/>
           </IconButton>
           </Badge>
