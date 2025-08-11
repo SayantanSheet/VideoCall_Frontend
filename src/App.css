@@ -67,5 +67,23 @@
 }
 
 .meetContainer {
-    
+    display: flex;
+    padding-inline:20px;
+    height: 80vh;
+    gap:10vw;
+    justify-content: center;
+}
+.leftPanel {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+.rightPanel {
+    display: flex;
+    align-items: center;
+}
+.rightPanel > img {
+    height: auto;
+    width: 30vw;
+    border-radius: 20px;
 }

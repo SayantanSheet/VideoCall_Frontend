@@ -40,10 +40,15 @@ import TextField from '@mui/material/TextField';
             <div className="leftPanel">
                 <div>
                     <h2>Providing Quality Video Call Just Like Quality Education</h2>
-                    <div style={{display:'flex', gap:"10px"}}></div>
+                    <div style={{display:'flex', gap:"10px"}}>
                       <TextField onChange={(e) => setMeetingCode(e.target.value)} id='outlined-basic' label="Enter Meeting Code"/>
-                    <Button variant="contained" onClick={handleJoinVideoCall}>Join</Button>
+                    <Button  variant="contained" onClick={handleJoinVideoCall}>Join</Button>
+                    </div>
                 </div>
+            </div>
+
+            <div className="rightPanel">
+                <img srcSet='/logo3.png' alt=''/>
             </div>
         </div>
         </>
