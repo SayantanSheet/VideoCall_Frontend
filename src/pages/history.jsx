@@ -25,8 +25,8 @@ export default function History() {
             try {
                 const history = await getHistoryOfUser();
                 setMeetings(history);
-            } catch {
-                // IMPLEMENT SNACKBAR
+            } catch (error) {
+                console.error("Error fetching history:", error);
             }
         }
 
